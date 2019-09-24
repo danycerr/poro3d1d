@@ -1,0 +1,38 @@
+[time]
+dt=1 #time step of the simulation
+[../]
+[biot]
+   [mesh]
+      mesh_type=GT_PK(3,1) # type mesh element
+      #resu_name
+      ndiv = 10 #number of cube subdivision
+      [../]
+   [fem]
+      fem_u=FEM_PK(3,1)    # fem space for disp
+      fem_p=FEM_PK(3,1)    # fem space for pressure
+      integr_method=IM_TETRAHEDRON(6) #integration method
+   [../]
+   [materials]
+      E=1.e+10;
+      poisson =0.3;
+      biot_modulus=1.e+9;
+      k =1.e-19; //permeability -14 
+      alpha=1.;  // Biot coefficient
+      rho_l=1000 // liquid density
+      rho_r=2200 // solid density
+   [../]
+[../]
+
+[1d]
+   [mesh]
+      mesh_type=GT_PK(1,1) # type mesh element
+      input_fn =segment.pts
+   [../]
+   [fem]
+      fem=FEM_PK(1,1)    # fem space for pres
+      fem_data=FEM_PK(1,0)    # fem space for pres
+      integr_method=IM_GAUSS1D(6) #integration method
+   [../]
+[../]
+
+
