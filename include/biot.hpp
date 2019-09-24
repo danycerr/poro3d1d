@@ -40,6 +40,11 @@ public:
     void solve();
     void print();
 
+    inline int ndof(){return mf_u_.nb_dof() + mf_p_.nb_dof();} // get dof number;
+
+    inline sparse_matrix_type& get_iter_mat() {return K_;}
+    inline std::vector<scalar_type>& get_iter_rhs() {return rhs_;}
+    void   setsol(std::vector<scalar_type>& sol); // copy the solution
 private:
    getfem::mesh mesh_;
    getfem::mesh_im mim_;           /// the integration methods

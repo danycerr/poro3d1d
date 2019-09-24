@@ -179,6 +179,15 @@ void BIOT::solve(){
    gmm::copy(gmm::sub_vector(UP_,gmm::sub_interval(nb_dof_u , nb_dof_p)), P_);	
    gmm::copy(U_,U_old_);gmm::copy(P_,P_old_);
 }
+//====================================
+void BIOT::setsol(std::vector<scalar_type>& sol){
+
+   getfem::size_type nb_dof_u = mf_u_.nb_dof();
+   getfem::size_type nb_dof_p = mf_p_.nb_dof();
+   // gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(0, nb_dof_u)), U_);				
+   // gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(nb_dof_u , nb_dof_p)), P_);	
+   gmm::copy(U_,U_old_);gmm::copy(P_,P_old_);
+}
 
 //=====================================
 void BIOT::print(){

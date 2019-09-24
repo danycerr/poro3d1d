@@ -32,6 +32,15 @@ public:
     void assembly_rhs();
     void solve();
     void print();
+    
+    inline int ndof(){return mf_.nb_dof();} // get dof number;
+
+    inline sparse_matrix_type& get_iter_mat() {return K_;}
+
+    inline std::vector<scalar_type>& get_iter_rhs() {return rhs_;}
+   
+    
+    inline void   setsol(std::vector<scalar_type>& sol){gmm::copy(sol,sol_); gmm::copy(sol_, sol_old_);} // copy the solution
 
 private:
    //! Mesh for the vessel network  (1D)
