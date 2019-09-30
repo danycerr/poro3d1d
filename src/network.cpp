@@ -26,6 +26,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   gmm::resize(sol_, nb_dof); gmm::clear(sol_);
   gmm::resize(sol_old_, nb_dof); gmm::clear(sol_old_);  
   std::fill(sol_.begin(), sol_.end(), 0); gmm::copy(sol_,sol_old_);
+  gmm::resize(Y_, mf_coef_.nb_dof());std::fill(Y_.begin(), Y_.end(), 1.);// coefficient mass matrix
   std::cout<<"init matricies"<<std::endl;
   gmm::resize(K_, nb_dof, nb_dof ); gmm::clear(K_);
   std::cout<<"number of dof "<< nb_dof<<std::endl;
@@ -34,7 +35,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   workspace_.add_fem_variable("p_old", mf_, gmm::sub_interval(0, nb_dof), sol_old_);
   configure_wp(df);
     
-
+  
 }//end constructor
 
 void NETWORK::genBC(){
@@ -180,6 +181,9 @@ void  NETWORK::build_mesh(getfem::mesh& mesh, const GetPot& df){
    nb_branches_ = nb_vertices_.size();
    std::cout<< "Number of branches "<< nb_branches_<<std::endl;
    ifs.close();
+   std::cout <<"radius import only constant"<<std::endl;
+   radius_.resize(nb_branches_);
+   for (int i=0; i< radius_.size(); i++) radius_[i]=df("1d/radius", 0.1);
    #ifdef MESH_INFO
    std::cout << "Mesh "<<std::endl;
    for (dal::bv_visitor i(mesh.points_index()); !i.finished(); ++i)
@@ -220,19 +224,24 @@ void NETWORK::assembly_mat(){
 
 //===========================================
 void NETWORK::assembly_rhs(){
-   std::cout<<"NETWORK::assembly_mat start assembling K"<<std::endl;
+   std::cout<<"NETWORK::assembly_mat start assembling rhs"<<std::endl;
    // ------------------ expressions --------------------------
    workspace_.add_expression( "+1*Test_p + p_old.Test_p", mim_);
    workspace_.set_assembled_vector(rhs_);
    workspace_.assembly(1);
    workspace_.clear_expressions();
 
+  std::cout<< BCList_<<std::endl;
   for(int i=0; i<BCList_.size();i++){
-     int counter=0;
      if ((BCList_[i].label).compare("DIR")==0)
         {  int counter=0;
-           for (dal::bv_visitor ipt(mf_.dof_on_region(100 + BCList_[i].idx)); !ipt.finished(); ++ipt)
-           if (local_idx_bc_[i]==counter) rhs_[ipt]+=1.e+8*BCList_[i].value;counter++;
+           for (dal::bv_visitor ipt(mf_.dof_on_region(100 + BCList_[i].idx)); !ipt.finished(); ++ipt){ 
+           std::cout << counter << " " << ipt<<std::endl;
+           if (local_idx_bc_[i]==counter) {
+                  rhs_[ipt]+=1.e+8*BCList_[i].value;std::cout << "adding rhs bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
+               }
+           counter++;
+           }
        }
    }
 }

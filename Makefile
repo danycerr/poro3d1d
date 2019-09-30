@@ -19,12 +19,4 @@ clean:
 resu_clean:
 	$(RM) $(RESU_OBJS)
 	
-depend: .depend
-
-.depend: $(SRCS)
-	rm -f ./.depend
-	$(CXX) $(CXXFLAGS) -MM $^ > ./.depend;
-
-include .depend
-	
-.PHONY: all clean resu_clean depend
+.PHONY: all clean resu_clean

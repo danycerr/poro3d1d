@@ -15,6 +15,7 @@ int main(int argc, char** argv)
    PROBLEM_3d1d bd(dataFile);
    bd.assembly_mat();
    bd.assembly_rhs();
+   bd.assembly_exchange_mat();
    bd.solve();
    bd.print();
 

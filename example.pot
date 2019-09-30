@@ -16,7 +16,7 @@ dt=1 #time step of the simulation
       E=1.e+10;
       poisson =0.3;
       biot_modulus=1.e+9;
-      k =1.e-19; //permeability -14 
+      k =1.e-4; //permeability -14 
       alpha=1.;  // Biot coefficient
       rho_l=1000 // liquid density
       rho_r=2200 // solid density
@@ -33,6 +33,13 @@ dt=1 #time step of the simulation
       fem_data=FEM_PK(1,0)    # fem space for pres
       integr_method=IM_GAUSS1D(6) #integration method
    [../]
+radius=0.3
 [../]
 
+[3d1d]
+   coupling =1
+[../]
 
+[interpolation]
+   NInt = 50 #Nb of discretisation point for 3D-1D interpolation
+[../]

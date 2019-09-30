@@ -148,8 +148,8 @@ void BIOT::assembly_rhs(){
    std::cout<<"BIOT::assembly_mat start assembling rhs"<<std::endl;
    gmm::clear(rhs_);
    //======= RHS =====================
-   if(N_==2) workspace_.add_expression("0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,-1].Test_u", mim_);
-   if(N_==3) workspace_.add_expression("0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,0,-1].Test_u", mim_);
+   if(N_==2) workspace_.add_expression("0.*0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,-1].Test_u", mim_);
+   if(N_==3) workspace_.add_expression("0.*0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,0,-1].Test_u", mim_);
    workspace_.add_expression("+[+0.0e-6].Test_p + (1/bm)*p_old.Test_p + alpha*Test_p*Div_u_old", mim_);
    workspace_.set_assembled_vector(rhs_);
    workspace_.assembly(1);
@@ -184,8 +184,8 @@ void BIOT::setsol(std::vector<scalar_type>& sol){
 
    getfem::size_type nb_dof_u = mf_u_.nb_dof();
    getfem::size_type nb_dof_p = mf_p_.nb_dof();
-   // gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(0, nb_dof_u)), U_);				
-   // gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(nb_dof_u , nb_dof_p)), P_);	
+   gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(0, nb_dof_u)), U_);				
+   gmm::copy(gmm::sub_vector(sol,gmm::sub_interval(nb_dof_u , nb_dof_p)), P_);	
    gmm::copy(U_,U_old_);gmm::copy(P_,P_old_);
 }
 

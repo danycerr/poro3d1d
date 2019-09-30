@@ -36,8 +36,14 @@ public:
     inline int ndof(){return mf_.nb_dof();} // get dof number;
 
     inline sparse_matrix_type& get_iter_mat() {return K_;}
-
+    
+    inline getfem::mesh_fem& get_fem() {return mf_;}
+    inline getfem::mesh_fem& get_fem_coef() {return mf_coef_;}
+    inline getfem::mesh_im&  get_im() {return mim_;}
+    
     inline std::vector<scalar_type>& get_iter_rhs() {return rhs_;}
+    inline std::vector<scalar_type>& get_radius() {return radius_;}
+    inline std::vector<scalar_type>& get_Y() {return Y_;}
    
     
     inline void   setsol(std::vector<scalar_type>& sol){gmm::copy(sol,sol_); gmm::copy(sol_, sol_old_);} // copy the solution
@@ -50,7 +56,9 @@ private:
    getfem::mesh_fem mf_coef_;      /// the mesh_fem to represent pde coefficients 
    std::vector<getfem::node> BCList_;
    std::vector<scalar_type> BC_value_;
+   std::vector<scalar_type> Y_;
    std::vector<int> local_idx_bc_;
+   std::vector<scalar_type> radius_; // branch radius
    size_type nb_branches_; // number branches in the network
    
 
