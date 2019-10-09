@@ -14,7 +14,8 @@ BIOT::BIOT(const GetPot& df): mim_(mesh_),
     N_ = pgt->dim(); 
     std::vector<size_type> nsubdiv(N_);
     std::fill(nsubdiv.begin(),nsubdiv.end(),df("biot/mesh/ndiv", 10));
-    getfem::regular_unit_mesh(mesh_, nsubdiv, pgt, 0);
+    std::cout<< df("biot/mesh/noise", 0) <<std::endl;
+    getfem::regular_unit_mesh(mesh_, nsubdiv, pgt, df("biot/mesh/noise", 0));
     std::cout<<"end mesh generation"<<std::endl;
 
     // set  integration methods  
@@ -89,23 +90,25 @@ void BIOT::gen_bc()
 
 void BIOT::configure_wp(const GetPot& df){
    std::cout << "BIOT::configure_wp Configuring workspace " << std::endl;
-   tau_[0] = df("dt", 1.0 ); // dt into  the workspace
+   tau_[0] = df("time/dt", 1.0 ); // dt into  the workspace
    workspace_.add_fixed_size_constant("tau", tau_);
    double poisson=df("biot/material/poisson", 0.3 );
-   double E=df("biot/material/E", 1 );
+   double E=df("biot/material/E", 1. );
    double mu_s = E/( 2 * ( 1 + poisson) ) ;
    double lambda_l= E*poisson/ ( ( 1+poisson ) * (1 - 2 * poisson)) ;
+   std::cout<<"mu "<<mu_s<< " lambda "<<  lambda_l<< " poisson "<< poisson<<" E "<< E <<std::endl;
    mu_[0] = mu_s;workspace_.add_fixed_size_constant("mu", mu_);
    //---------------------------------------------------------
-   bm_[0] =  df("biot/material/biot_modulus",1);
+   bm_[0] =  df("biot/material/biot_modulus",1.);
    workspace_.add_fixed_size_constant("bm", bm_);
    //---------------------------------------------------------
    lambda_[0] = lambda_l;workspace_.add_fixed_size_constant("lambda", lambda_);
    //---------------------------------------------------------
-   alpha_[0] = df("biot/material/alpha",1);
+   alpha_[0] = df("biot/material/alpha",1.);
+   std::cout<<"alpha "<< alpha_[0]<<std::endl; 
    workspace_.add_fixed_size_constant("alpha", alpha_);
    //---------------------------------------------------------
-   permeability_[0] =  df("biot/material/k",1);
+   permeability_[0] =  df("biot/material/k",1.);
    workspace_.add_fixed_size_constant("permeability", permeability_);
    //---------------------------------------------------------
    penalty_[0] = 1.e+12; // 1---10
@@ -117,11 +120,11 @@ void BIOT::configure_wp(const GetPot& df){
 void BIOT::assembly_mat(){
    std::cout<<"BIOT::assembly_mat start assembling K"<<std::endl;
 // ------------------ expressions --------------------------
-   workspace_.add_expression("2*mu*Sym(Grad_u):Grad_Test_u + lambda*Div_u*Div_Test_u- alpha*p.Div_Test_u ", mim_);
+   workspace_.add_expression("2*mu*Sym(Grad_u):Grad_Test_u + lambda*Div_u*Div_Test_u - alpha*p.Div_Test_u ", mim_);
    workspace_.add_expression( "+(1/bm)*p.Test_p + tau*permeability*Grad_p.Grad_Test_p+ alpha*Test_p*Div_u", mim_);
-   workspace_.assembly(2);
-   gmm::copy(workspace_.assembled_matrix(), K_);
-   workspace_.clear_expressions();
+   // workspace_.assembly(2);
+   // gmm::copy(workspace_.assembled_matrix(), K_);
+   // workspace_.clear_expressions();
 // bcs
    workspace_.add_expression("penalty/element_size*p*Test_p", mim_, TOP);
    workspace_.add_expression("-permeability*Grad_p.Normal*Test_p - permeability*Grad_Test_p.Normal*p ", mim_, TOP); 	
@@ -149,7 +152,7 @@ void BIOT::assembly_rhs(){
    gmm::clear(rhs_);
    //======= RHS =====================
    if(N_==2) workspace_.add_expression("0.*0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,-1].Test_u", mim_);
-   if(N_==3) workspace_.add_expression("0.*0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,0,-1].Test_u", mim_);
+   if(N_==3) workspace_.add_expression("0.*[0,0,-1].Test_u", mim_);
    workspace_.add_expression("+[+0.0e-6].Test_p + (1/bm)*p_old.Test_p + alpha*Test_p*Div_u_old", mim_);
    workspace_.set_assembled_vector(rhs_);
    workspace_.assembly(1);
@@ -190,10 +193,9 @@ void BIOT::setsol(std::vector<scalar_type>& sol){
 }
 
 //=====================================
-void BIOT::print(){
+void BIOT::print(int iter){
 std::cout<< "BIOT::print() "<< "biot.vtk"<<std::endl;
-//getfem::vtk_export exp(p_des.datafilename + "." +  std::to_string(time) + ".vtk");
-getfem::vtk_export exp("biot.vtk");
+getfem::vtk_export exp("biot."+std::to_string(iter)+".vtk");
 exp.exporting(mf_u_);  	exp.write_point_data(mf_u_, U_, "u"); 
 exp.write_point_data(mf_p_, P_, "p"); 
 }

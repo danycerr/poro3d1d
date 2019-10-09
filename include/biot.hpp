@@ -38,7 +38,7 @@ public:
     void assembly_mat();
     void assembly_rhs();
     void solve();
-    void print();
+    void print(int iter=0);
 
     inline int ndof(){return mf_u_.nb_dof() + mf_p_.nb_dof();} // get dof number;
 

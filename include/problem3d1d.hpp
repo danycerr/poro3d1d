@@ -34,7 +34,7 @@ public:
    void assembly_rhs();
    void assembly_exchange_mat();
    void solve();
-   void print();
+   void print(int iter=0);
 private:
 
    BIOT biot_problem;

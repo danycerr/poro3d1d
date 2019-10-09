@@ -13,7 +13,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   bgeot::pgeometric_trans pgt = 
 		bgeot::geometric_trans_descriptor(df("1d/mesh/mesh_type", "GT_PK(1,1)"));
   getfem::pfem pf = getfem::fem_descriptor(df("1d/fem/fem", "FEM_PK(1,1)"));
-  getfem::pintegration_method ppi = getfem::int_method_descriptor(df("biot/fem/integr_method", "IM_GAUSS1D(6)"));
+  getfem::pintegration_method ppi = getfem::int_method_descriptor(df("1d/fem/integr_method", "IM_GAUSS1D(6)"));
   mim_.set_integration_method(mesh_.convex_index(), ppi);
   mf_.set_finite_element(mesh_.convex_index(), pf); // finite element for displacement
   mf_coef_.set_finite_element(mesh_.convex_index(),getfem::classical_fem(pgt,0));// p0 for coefficient
@@ -184,6 +184,7 @@ void  NETWORK::build_mesh(getfem::mesh& mesh, const GetPot& df){
    std::cout <<"radius import only constant"<<std::endl;
    radius_.resize(nb_branches_);
    for (int i=0; i< radius_.size(); i++) radius_[i]=df("1d/radius", 0.1);
+   std::cout <<"radius import only constant "<< radius_[0] <<std::endl;
    #ifdef MESH_INFO
    std::cout << "Mesh "<<std::endl;
    for (dal::bv_visitor i(mesh.points_index()); !i.finished(); ++i)
@@ -224,26 +225,30 @@ void NETWORK::assembly_mat(){
 
 //===========================================
 void NETWORK::assembly_rhs(){
-   std::cout<<"NETWORK::assembly_mat start assembling rhs"<<std::endl;
+    gmm::clear(rhs_);
+    std::cout<<"NETWORK::assembly_mat start assembling rhs"<<std::endl;
    // ------------------ expressions --------------------------
-   workspace_.add_expression( "+1*Test_p + p_old.Test_p", mim_);
-   workspace_.set_assembled_vector(rhs_);
-   workspace_.assembly(1);
-   workspace_.clear_expressions();
-
-  std::cout<< BCList_<<std::endl;
-  for(int i=0; i<BCList_.size();i++){
-     if ((BCList_[i].label).compare("DIR")==0)
-        {  int counter=0;
-           for (dal::bv_visitor ipt(mf_.dof_on_region(100 + BCList_[i].idx)); !ipt.finished(); ++ipt){ 
-           std::cout << counter << " " << ipt<<std::endl;
-           if (local_idx_bc_[i]==counter) {
-                  rhs_[ipt]+=1.e+8*BCList_[i].value;std::cout << "adding rhs bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
-               }
-           counter++;
-           }
-       }
-   }
+    workspace_.add_expression( "+0*Test_p + p_old.Test_p", mim_);
+    workspace_.set_assembled_vector(rhs_);
+    workspace_.assembly(1);
+    workspace_.clear_expressions();
+ 
+    std::cout<< BCList_<<std::endl;
+    for(int i=0; i<BCList_.size();i++){
+        if ((BCList_[i].label).compare("DIR")==0)
+            {
+                int counter=0;
+                for (dal::bv_visitor ipt(mf_.dof_on_region(100 + BCList_[i].idx)); !ipt.finished(); ++ipt){
+                    std::cout << "condition of node "<< i << " counter "<<counter 
+                              << " " << ipt<<" loc index "<<local_idx_bc_[i] <<std::endl;
+                    if (local_idx_bc_[i]==counter) {
+                        rhs_[ipt]+=1.e+8*BCList_[i].value;
+                        std::cout << "adding rhs bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
+                    }
+                    counter++;
+                }
+            }
+    }
 }
   
 
@@ -265,10 +270,9 @@ void NETWORK::solve(){
 }
 
 //=====================================
-void NETWORK::print(){
+void NETWORK::print(int iter){
 std::cout<< "Network::print() "<< "nework.vtk"<<std::endl;
-//getfem::vtk_export exp(p_des.datafilename + "." +  std::to_string(time) + ".vtk");
-getfem::vtk_export exp("network.vtk");
+getfem::vtk_export exp("network."+std::to_string(iter)+".vtk");
  exp.exporting(mf_);  	exp.write_point_data(mf_, sol_, "pod"); 
 // exp.write_point_data(mf_p_, P_, "p"); 
 }

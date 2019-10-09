@@ -40,7 +40,7 @@ void PROBLEM_3d1d::assembly_exchange_mat(){
    gmm::copy(gmm::transposed(B1d3d), B3d1d);
    std::cout << "PROBLEM_3d1d::assembly_exchange_mat()  B3d3d " <<std::endl;
    gmm::mult(gmm::transposed(op_3d1d_.get_Mbar()), B1d3d, B3d3d);
-   if(1){
+   if(coupling_){
    std::cout<<"Adding coupling operator to global matrix"<<std::endl;
    double pi=3.1415; double r0=(oned_problem.get_radius())[0];
       gmm::add(gmm::scaled(B3d3d, 2.0*pi*r0),			 
@@ -77,10 +77,11 @@ void PROBLEM_3d1d::assembly_mat(){
 
 //====================================
 void PROBLEM_3d1d::assembly_rhs(){
-   biot_problem.assembly_rhs();
-   gmm::copy(biot_problem.get_iter_rhs(), gmm::sub_vector(rhs_,gmm::sub_interval(0, nb_dof_biot_)));
-   oned_problem.assembly_rhs();
-   gmm::add(oned_problem.get_iter_rhs(), gmm::sub_vector(rhs_,gmm::sub_interval(nb_dof_biot_,nb_dof_oned_)));
+    gmm::clear(rhs_);
+    biot_problem.assembly_rhs();
+    gmm::copy(biot_problem.get_iter_rhs(), gmm::sub_vector(rhs_,gmm::sub_interval(0, nb_dof_biot_)));
+    oned_problem.assembly_rhs();
+    gmm::add(oned_problem.get_iter_rhs(), gmm::sub_vector(rhs_,gmm::sub_interval(nb_dof_biot_,nb_dof_oned_)));
 }
 
 //=====================================
@@ -104,7 +105,7 @@ void PROBLEM_3d1d::solve(){
    oned_problem.setsol(buf);
 }
 //====================================
-void PROBLEM_3d1d::print(){
-   biot_problem.print();
-   oned_problem.print();
+void PROBLEM_3d1d::print(int iter){
+   biot_problem.print(iter);
+   oned_problem.print(iter);
 }

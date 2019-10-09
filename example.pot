@@ -1,45 +1,49 @@
 [time]
-dt=1 #time step of the simulation
+dt=0.01 #time step of the simulation
+nstep=10
 [../]
+[]
 [biot]
-   [mesh]
+   [./mesh]
       mesh_type=GT_PK(3,1) # type mesh element
       #resu_name
-      ndiv = 10 #number of cube subdivision
-      [../]
-   [fem]
+      ndiv=11 #number of cube subdivision
+      noise=1
+   [../]
+   [./fem]
       fem_u=FEM_PK(3,1)    # fem space for disp
       fem_p=FEM_PK(3,1)    # fem space for pressure
       integr_method=IM_TETRAHEDRON(6) #integration method
    [../]
-   [materials]
-      E=1.e+10;
-      poisson =0.3;
-      biot_modulus=1.e+9;
-      k =1.e-4; //permeability -14 
-      alpha=1.;  // Biot coefficient
+   [./material]
+      E=1.e+10
+      poisson =0.3
+      biot_modulus=1.e+9
+      k=1.e-8; //permeability -14 
+      alpha=1.  // Biot coefficient
       rho_l=1000 // liquid density
       rho_r=2200 // solid density
    [../]
 [../]
-
+[]
 [1d]
-   [mesh]
+   [./mesh]
       mesh_type=GT_PK(1,1) # type mesh element
-      input_fn =segment.pts
+      # input_fn =segment.pts
+      input_fn=horizontal_single.pts
    [../]
-   [fem]
+   [./fem]
       fem=FEM_PK(1,1)    # fem space for pres
       fem_data=FEM_PK(1,0)    # fem space for pres
       integr_method=IM_GAUSS1D(6) #integration method
    [../]
-radius=0.3
+radius=0.05
 [../]
-
+[]
 [3d1d]
-   coupling =1
+   coupling=1
 [../]
-
+[]
 [interpolation]
-   NInt = 50 #Nb of discretisation point for 3D-1D interpolation
+   NInt=50 #Nb of discretisation point for 3D-1D interpolation
 [../]
