@@ -2,6 +2,7 @@
 
 NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
                                      mf_(mesh_),
+                                     mf_u_(mesh_),
                                      mf_coef_(mesh_),
                                      BC_value_(1)
 {
@@ -15,7 +16,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   getfem::pfem pf = getfem::fem_descriptor(df("1d/fem/fem", "FEM_PK(1,1)"));
   getfem::pintegration_method ppi = getfem::int_method_descriptor(df("1d/fem/integr_method", "IM_GAUSS1D(6)"));
   mim_.set_integration_method(mesh_.convex_index(), ppi);
-  mf_.set_finite_element(mesh_.convex_index(), pf); // finite element for displacement
+  mf_.set_finite_element(mesh_.convex_index(), pf); // finite element for pressure
   mf_coef_.set_finite_element(mesh_.convex_index(),getfem::classical_fem(pgt,0));// p0 for coefficient
   std::cout<<"end NETWORK::NETWORK  Configuring fem"<<std::endl;
   genBC();
@@ -26,7 +27,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   gmm::resize(sol_, nb_dof); gmm::clear(sol_);
   gmm::resize(sol_old_, nb_dof); gmm::clear(sol_old_);  
   std::fill(sol_.begin(), sol_.end(), 0); gmm::copy(sol_,sol_old_);
-  gmm::resize(Y_, mf_coef_.nb_dof());std::fill(Y_.begin(), Y_.end(), 1.);// coefficient mass matrix
+  gmm::resize(Y_, mf_coef_.nb_dof());std::fill(Y_.begin(), Y_.end(), 1.e-0);// coefficient mass matrix
   std::cout<<"init matricies"<<std::endl;
   gmm::resize(K_, nb_dof, nb_dof ); gmm::clear(K_);
   std::cout<<"number of dof "<< nb_dof<<std::endl;
@@ -34,8 +35,12 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   workspace_.add_fem_variable("p", mf_, gmm::sub_interval(0, nb_dof), sol_);
   workspace_.add_fem_variable("p_old", mf_, gmm::sub_interval(0, nb_dof), sol_old_);
   configure_wp(df);
-    
   
+  // build also a vectorial fem for displacement
+  mf_u_.set_finite_element(mesh_.convex_index(), pf); // finite element for pressure
+  vec_dim_=df("1d/fem/vec_dim", 3);
+  mf_u_.set_qdim(vec_dim_);
+  gmm::resize(disp_,mf_u_.nb_dof());
 }//end constructor
 
 void NETWORK::genBC(){
@@ -273,7 +278,8 @@ void NETWORK::solve(){
 void NETWORK::print(int iter){
 std::cout<< "Network::print() "<< "nework.vtk"<<std::endl;
 getfem::vtk_export exp("network."+std::to_string(iter)+".vtk");
- exp.exporting(mf_);  	exp.write_point_data(mf_, sol_, "pod"); 
-// exp.write_point_data(mf_p_, P_, "p"); 
+exp.exporting(mf_);     exp.write_point_data(mf_, sol_, "pod"); 
+getfem::vtk_export exp_disp("network.disp."+std::to_string(iter)+".vtk");
+exp_disp.exporting(mf_u_);     exp_disp.write_point_data(mf_u_, disp_, "ubar"); 
 }
 

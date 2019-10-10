@@ -19,6 +19,7 @@ PROBLEM_3d1d::PROBLEM_3d1d(const GetPot& df):biot_problem(df),
    
    std::cout<<"PROBLEM_3d1d:: build interpolation operators"<<std::endl;
    op_3d1d_.build_operator();
+   op_3d1d_.extend2vector(biot_problem.get_fem_u(), oned_problem.get_fem_vec());
 
   
    coupling_ = df("3d1d/coupling",1);
@@ -108,4 +109,15 @@ void PROBLEM_3d1d::solve(){
 void PROBLEM_3d1d::print(int iter){
    biot_problem.print(iter);
    oned_problem.print(iter);
+}
+
+//==================================
+
+void PROBLEM_3d1d::project_disp_b2n(){
+    
+   std::vector<scalar_type> buf(nb_dof_biot_u_);
+   std::vector<scalar_type> buf1d((oned_problem.get_fem_vec()).nb_dof());
+   gmm::copy(gmm::sub_vector(sol_,gmm::sub_interval(0 , nb_dof_biot_u_)), buf);
+   gmm::mult(op_3d1d_.get_Mbar_vec(),buf,buf1d);
+   oned_problem.setdisp(buf1d);
 }

@@ -41,12 +41,12 @@ void branch::generate(){
 
 void print(std::vector<branch> branches){
 std::ofstream out;
-out.open("./horizontal_single.pts");
+out.open("./wells_double.pts");
 out<<"BEGIN_LIST" <<std::endl;
 for(int b=0;b<branches.size();b++){
 out<<"BEGIN_ARC" <<std::endl;
 out<<"BC DIR  " << branches[b].val1 <<std::endl;
-out<<"BC MIX  " << branches[b].val2 <<std::endl;
+out<<"BC DIR  " << branches[b].val2 <<std::endl;
 out<<"\t" << 1<<"\t"<<branches[b].x[0]<< "\t" << branches[b].y[0]<< "\t" << branches[b].z[0]<<"\t"<<"begin"<<std::endl;
 out<<"\t"  << 1<<"\t"
           << branches[b].x[branches[b].x.size()-1] << "\t"  
@@ -146,12 +146,30 @@ int main (){
 //     }
     
     
-    double eps=1.e-2;double h=1.;int ndiv=10;
+    double eps=1.e-6;double h=1.;int ndiv=10;
     //central branch
-    std::vector<double> p1={0,0.5+eps,0.5+2*eps}; double pt1d=10.;
-    std::vector<double> p2={h,0.5 + eps,0.5 + 2*eps }; double pt2d=50.;
+    // std::vector<double> p1={0,eps,2*eps}; double pt1d=0.;
+    // std::vector<double> p2={h,eps,2*eps }; double pt2d=10.;
+    // branch b1(p1,p2,ndiv, pt1d,pt2d);
+    // branches.push_back(b1);
+    
+    // in out
+    
+    {
+    std::vector<double> p1={0.3 + eps,0.5+eps,0.}; double pt1d=50.;
+    std::vector<double> p2={0.3 + eps,0.5+eps,h }; double pt2d=45.;
     branch b1(p1,p2,ndiv, pt1d,pt2d);
     branches.push_back(b1);
+    }
+    {
+    std::vector<double> p1={0.6 + eps,0.5+eps,0.}; double pt1d=50.;
+    std::vector<double> p2={0.6 + eps,0.5+eps,h }; double pt2d=0.;
+    branch b1(p1,p2,ndiv, pt1d,pt2d);
+    branches.push_back(b1);
+    }
+    
+    
+    
     print(branches); 
     
     std::cout<<"Endl of Generator of branches"<<std::endl;

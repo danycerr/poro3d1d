@@ -38,6 +38,7 @@ public:
     inline sparse_matrix_type& get_iter_mat() {return K_;}
     
     inline getfem::mesh_fem& get_fem() {return mf_;}
+    inline getfem::mesh_fem& get_fem_vec() {return mf_u_;}
     inline getfem::mesh_fem& get_fem_coef() {return mf_coef_;}
     inline getfem::mesh_im&  get_im() {return mim_;}
     
@@ -47,12 +48,15 @@ public:
    
     
     inline void   setsol(std::vector<scalar_type>& sol){gmm::copy(sol,sol_); gmm::copy(sol_, sol_old_);} // copy the solution
+    inline void   setdisp(std::vector<scalar_type>& buf){gmm::copy(buf,disp_); } // copy the solution
 
 private:
    //! Mesh for the vessel network  (1D)
    getfem::mesh mesh_;   
    getfem::mesh_im mim_;           /// the integration methods
    getfem::mesh_fem mf_;         /// the main mesh_fem, for the pressure solution
+   getfem::mesh_fem mf_u_;         /// the main mesh_fem, for the pressure solution
+   size_type vec_dim_;
    getfem::mesh_fem mf_coef_;      /// the mesh_fem to represent pde coefficients 
    std::vector<getfem::node> BCList_;
    std::vector<scalar_type> BC_value_;
@@ -67,7 +71,7 @@ private:
    
    std::vector<scalar_type> sol_, sol_old_, rhs_;    /// solution and old solution
    sparse_matrix_type K_;                         /// iteration matrix 	
-   
+   std::vector<scalar_type> disp_;
    
    void configure_wp(const GetPot& df);	
    void genBC();

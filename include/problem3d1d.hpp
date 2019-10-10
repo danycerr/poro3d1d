@@ -34,6 +34,8 @@ public:
    void assembly_rhs();
    void assembly_exchange_mat();
    void solve();
+   
+   void project_disp_b2n();
    void print(int iter=0);
 private:
 

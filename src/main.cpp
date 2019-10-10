@@ -21,6 +21,7 @@ int main(int argc, char** argv)
    {
         bd.assembly_rhs();
         bd.solve();
+        bd.project_disp_b2n();
         bd.print(istep);
        
    }

@@ -31,11 +31,13 @@ nstep=10
       mesh_type=GT_PK(1,1) # type mesh element
       # input_fn =segment.pts
       input_fn=horizontal_single.pts
+      #input_fn=wells_double.pts
    [../]
    [./fem]
       fem=FEM_PK(1,1)    # fem space for pres
       fem_data=FEM_PK(1,0)    # fem space for pres
       integr_method=IM_GAUSS1D(6) #integration method
+      vec_dim=3 #dimension of the vectorial field
    [../]
 radius=0.05
 [../]

@@ -25,7 +25,7 @@ void INTERPOLATOR::build_operator(){
    size_type nb_dof_t     = mf_1_->nb_dof();
    size_type nb_dof_v     = mf_2_->nb_dof();
    // Linear interpolation map mf_1 --> mf_2
-   getfem::interpolation(*mf_1_, *mf_2_, Mlin_);  
+   getfem::interpolation(*mf_1_, *mf_2_, Mlin_);
    // Aux vectors for local interpolation
    std::vector<scalar_type> Pbari(NInt_); 
    std::vector<scalar_type> Pt(nb_dof_t); 
@@ -38,6 +38,7 @@ void INTERPOLATOR::build_operator(){
         }
       // We need the following interpolation tool <getfem_interpolation.h>      
       getfem::mesh_trans_inv mti(mf_1_->linked_mesh());
+   std::cout<<"End linear mesh_trans_inv"<< std::endl;
       // Build the list of point on the i-th circle:
       // ... first consider an orthonormal system v0, v1, v2:
       base_node v0;
@@ -89,4 +90,70 @@ void INTERPOLATOR::build_operator(){
 	} // end of outer for loop 
 	std::cout << std::endl;
 
+}
+
+
+
+void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& mf_2_vec){
+    
+    std::cout<<"extd interpolation 2 vectorial field"<<std::endl;
+    mf_1_vec_ = &mf_1_vec;  // bulk
+    mf_2_vec_ = &mf_2_vec; // network 
+    
+    Mbar_vec_.resize(mf_2_vec_->nb_dof(), mf_1_vec_->nb_dof());gmm::clear(Mbar_vec_);
+    std::cout<<"size of Mbar_vec_ "<<mf_2_vec_->nb_dof()<<" x "<<  mf_1_vec_->nb_dof()<<std::endl;
+    
+    size_type nb_dof_t     = mf_1_->nb_dof();
+    size_type nb_dof_v     = mf_2_->nb_dof();
+    
+    for (int idof=0; idof<nb_dof_v; idof++ ){
+    bgeot::base_node pt_1d(mf_2_->point_of_basic_dof(idof));
+        // evaluate corresponding 1d vec dof
+    std::vector<int> vec_1d_dof;
+    for(int idof_v=0; idof_v<mf_2_vec_->nb_dof(); idof_v++){
+            bgeot::base_node pt_vec_1d(mf_2_vec_->point_of_basic_dof(idof_v));
+            double distance = 0;
+            for (int idim=0; idim<3; idim++) distance+=fabs(pt_1d[idim]-pt_vec_1d[idim]);
+            if(distance<1.e-16){
+                    std::cout<<"assosiated dof 1d " << idof_v<<std::endl;
+                    vec_1d_dof.push_back(idof_v);
+            }
+    }
+
+        
+        
+        
+        
+        std::vector<int> nonzero;
+        for (int icol=0; icol<nb_dof_t; icol++){
+            if(fabs(Mbar_(idof, icol))>1.e-16){
+            nonzero.push_back(icol);
+            }
+        }
+        std::cout <<"dof "<<idof <<"non zero in "<< nonzero<<std::endl;
+        for(int ibulkdof=0; ibulkdof<nonzero.size(); ibulkdof++){
+                int bdof=nonzero[ibulkdof]; // target dof
+                std::cout <<"line "<< idof <<" coupled with bulk dof "
+                        <<bdof  << " weight "<<Mbar_(idof,bdof) <<std::endl;
+                bgeot::base_node pt(mf_1_->point_of_basic_dof(bdof));
+                std::vector<int> vec_dof;
+                for(int ivecbulkdof=0; ivecbulkdof<mf_1_vec_->nb_dof(); ivecbulkdof++){
+                    bgeot::base_node pt_vec(mf_1_vec_->point_of_basic_dof(ivecbulkdof));
+                    double distance = 0;
+                    for (int idim=0; idim<3; idim++) distance+=fabs(pt[idim]-pt_vec[idim]);
+                    if(distance<1.e-16){
+                        std::cout<<"assosiated dof " << ivecbulkdof<<std::endl;
+                        vec_dof.push_back(ivecbulkdof);
+                    }
+                }
+            for(int idof_v_1d=0; idof_v_1d < vec_1d_dof.size(); idof_v_1d++ ){
+                int ii= vec_1d_dof[idof_v_1d];
+                int jj= vec_dof[idof_v_1d];
+                Mbar_vec_(ii,jj) = Mbar_(idof,bdof);
+            }
+                
+        }
+    } 
+    
+    
 }

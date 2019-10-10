@@ -48,6 +48,7 @@ public:
     inline sparse_matrix_type& get_iter_mat() {return K_;}
     inline std::vector<scalar_type>& get_iter_rhs() {return rhs_;}
     inline getfem::mesh_fem& get_fem_p() {return mf_p_;}
+    inline getfem::mesh_fem& get_fem_u() {return mf_u_;}
     void   setsol(std::vector<scalar_type>& sol); // copy the solution
 private:
    getfem::mesh mesh_;
