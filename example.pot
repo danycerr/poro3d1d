@@ -7,7 +7,7 @@ nstep=10
    [./mesh]
       mesh_type=GT_PK(3,1) # type mesh element
       #resu_name
-      ndiv=11 #number of cube subdivision
+      ndiv=17 #number of cube subdivision
       noise=1
    [../]
    [./fem]
@@ -30,8 +30,8 @@ nstep=10
    [./mesh]
       mesh_type=GT_PK(1,1) # type mesh element
       # input_fn =segment.pts
-      input_fn=horizontal_single.pts
-      #input_fn=wells_double.pts
+      # input_fn=horizontal_single.pts
+      input_fn=wells_double.pts
    [../]
    [./fem]
       fem=FEM_PK(1,1)    # fem space for pres

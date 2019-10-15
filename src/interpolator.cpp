@@ -96,7 +96,7 @@ void INTERPOLATOR::build_operator(){
 
 void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& mf_2_vec){
     
-    std::cout<<"extd interpolation 2 vectorial field"<<std::endl;
+    std::cout<<"INTERPOLATOR::extend2vector extd interpolation 2 vectorial field"<<std::endl;
     mf_1_vec_ = &mf_1_vec;  // bulk
     mf_2_vec_ = &mf_2_vec; // network 
     
@@ -115,7 +115,6 @@ void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& m
             double distance = 0;
             for (int idim=0; idim<3; idim++) distance+=fabs(pt_1d[idim]-pt_vec_1d[idim]);
             if(distance<1.e-16){
-                    std::cout<<"assosiated dof 1d " << idof_v<<std::endl;
                     vec_1d_dof.push_back(idof_v);
             }
     }
@@ -130,11 +129,9 @@ void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& m
             nonzero.push_back(icol);
             }
         }
-        std::cout <<"dof "<<idof <<"non zero in "<< nonzero<<std::endl;
+        // std::cout <<"dof "<<idof <<"non zero in "<< nonzero<<std::endl;
         for(int ibulkdof=0; ibulkdof<nonzero.size(); ibulkdof++){
                 int bdof=nonzero[ibulkdof]; // target dof
-                std::cout <<"line "<< idof <<" coupled with bulk dof "
-                        <<bdof  << " weight "<<Mbar_(idof,bdof) <<std::endl;
                 bgeot::base_node pt(mf_1_->point_of_basic_dof(bdof));
                 std::vector<int> vec_dof;
                 for(int ivecbulkdof=0; ivecbulkdof<mf_1_vec_->nb_dof(); ivecbulkdof++){
@@ -142,7 +139,6 @@ void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& m
                     double distance = 0;
                     for (int idim=0; idim<3; idim++) distance+=fabs(pt[idim]-pt_vec[idim]);
                     if(distance<1.e-16){
-                        std::cout<<"assosiated dof " << ivecbulkdof<<std::endl;
                         vec_dof.push_back(ivecbulkdof);
                     }
                 }
@@ -153,7 +149,7 @@ void INTERPOLATOR::extend2vector(getfem::mesh_fem& mf_1_vec, getfem::mesh_fem& m
             }
                 
         }
-    } 
+    }
     
-    
+    std::cout<<" INTERPOLATOR::extend2vector end"<<std::endl;
 }
