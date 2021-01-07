@@ -4,7 +4,9 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
                                      mf_(mesh_),
                                      mf_u_(mesh_),
                                      mf_coef_(mesh_),
-                                     BC_value_(1)
+                                     BC_value_(1),
+                                     k_ratio_(1),
+                                     tau_(1)
 {
   nb_vertices_.resize(0); nb_vertices_.clear();
   BCList_.resize(0);
@@ -27,7 +29,7 @@ NETWORK::NETWORK (const GetPot& df): mim_(mesh_),
   gmm::resize(sol_, nb_dof); gmm::clear(sol_);
   gmm::resize(sol_old_, nb_dof); gmm::clear(sol_old_);  
   std::fill(sol_.begin(), sol_.end(), 0); gmm::copy(sol_,sol_old_);
-  gmm::resize(Y_, mf_coef_.nb_dof());std::fill(Y_.begin(), Y_.end(), 1.e-0);// coefficient mass matrix
+  gmm::resize(Y_, mf_coef_.nb_dof());std::fill(Y_.begin(), Y_.end(), 100/df("1d/radius", 0.1));// coefficient mass matrix
   std::cout<<"init matricies"<<std::endl;
   gmm::resize(K_, nb_dof, nb_dof ); gmm::clear(K_);
   std::cout<<"number of dof "<< nb_dof<<std::endl;
@@ -202,13 +204,20 @@ void  NETWORK::build_mesh(getfem::mesh& mesh, const GetPot& df){
 void NETWORK::configure_wp(const GetPot& df){
  BC_value_[0] =  0.;
  workspace_.add_fixed_size_constant("bc_value", BC_value_);
+ k_ratio_[0] =  df("1d/kratio", 1.e+4);
+ workspace_.add_fixed_size_constant("kw_over_kp", k_ratio_);
+ 
+ tau_[0] = df("time/dt", 1.0 ) *  df("biot/material/k",1.) / (df("biot/mesh/lref", 1.e+3) * df("biot/mesh/lref", 1.e+3)); // dt into  the workspace
+ std::cout <<"modified tau 1d : "<< df("time/dt", 1.0 ) *  df("biot/material/k",1.) / (df("biot/mesh/lref", 1.e+3) * df("biot/mesh/lref", 1.e+3))
+ <<std::endl;
+ workspace_.add_fixed_size_constant("tau", tau_);
 }
 
 //===========================================
 void NETWORK::assembly_mat(){
    std::cout<<"NETWORK::assembly_mat start assembling K"<<std::endl;
    // ------------------ expressions --------------------------
-   workspace_.add_expression( "+p.Test_p + Grad_p.Grad_Test_p", mim_);
+   workspace_.add_expression( "+(0/tau)*p.Test_p + kw_over_kp*Grad_p.Grad_Test_p", mim_);
    workspace_.assembly(2);
    gmm::copy(workspace_.assembled_matrix(), K_);
    workspace_.clear_expressions();
@@ -220,7 +229,7 @@ void NETWORK::assembly_mat(){
            for (dal::bv_visitor ipt(mf_.dof_on_region(100 + BCList_[i].idx)); !ipt.finished(); ++ipt){ 
            std::cout << counter << " " << ipt<<std::endl;
            if (local_idx_bc_[i]==counter) {
-                  K_(ipt,ipt)+=1.e+8;std::cout << "adding bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
+                  K_(ipt,ipt)+=1.e+15;std::cout << "adding bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
                }
            counter++;
            }
@@ -233,7 +242,7 @@ void NETWORK::assembly_rhs(){
     gmm::clear(rhs_);
     std::cout<<"NETWORK::assembly_mat start assembling rhs"<<std::endl;
    // ------------------ expressions --------------------------
-    workspace_.add_expression( "+0*Test_p + p_old.Test_p", mim_);
+    workspace_.add_expression( "+0*Test_p + (0./tau)*p_old.Test_p", mim_);
     workspace_.set_assembled_vector(rhs_);
     workspace_.assembly(1);
     workspace_.clear_expressions();
@@ -247,7 +256,7 @@ void NETWORK::assembly_rhs(){
                     std::cout << "condition of node "<< i << " counter "<<counter 
                               << " " << ipt<<" loc index "<<local_idx_bc_[i] <<std::endl;
                     if (local_idx_bc_[i]==counter) {
-                        rhs_[ipt]+=1.e+8*BCList_[i].value;
+                        rhs_[ipt]+=1.e+15*BCList_[i].value;
                         std::cout << "adding rhs bc on "<< ipt <<" at "<< local_idx_bc_[i] <<std::endl;
                     }
                     counter++;

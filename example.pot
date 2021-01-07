@@ -1,5 +1,5 @@
 [time]
-dt=0.01 #time step of the simulation
+dt=1.e+4 #time step of the simulation
 nstep=10
 [../]
 []
@@ -19,10 +19,12 @@ nstep=10
       E=1.e+10
       poisson =0.3
       biot_modulus=1.e+9
-      k=1.e-8; //permeability -14 
+      k=1.e-12; //permeability -14 
       alpha=1.  // Biot coefficient
       rho_l=1000 // liquid density
       rho_r=2200 // solid density
+      prefin = 1.e+7;
+      prefout = 1.e+6;
    [../]
 [../]
 []
@@ -39,7 +41,7 @@ nstep=10
       integr_method=IM_GAUSS1D(6) #integration method
       vec_dim=3 #dimension of the vectorial field
    [../]
-radius=0.05
+radius=0.001
 [../]
 []
 [3d1d]

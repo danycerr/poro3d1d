@@ -5,7 +5,7 @@ BIOT::BIOT(const GetPot& df): mim_(mesh_),
                               mf_p_(mesh_),
                               mf_coef_(mesh_),
                               tau_(1), mu_(1), bm_ (1),lambda_(1),
-                              alpha_(1), permeability_(1),penalty_(1)
+                              alpha_(1), permeability_(1),penalty_(1), beta_(1), fcoef_(1)
 {
     std::cout<<"BIOT::BIOT build biot class"<<std::endl;
     bgeot::pgeometric_trans pgt = 
@@ -16,6 +16,7 @@ BIOT::BIOT(const GetPot& df): mim_(mesh_),
     std::fill(nsubdiv.begin(),nsubdiv.end(),df("biot/mesh/ndiv", 10));
     std::cout<< df("biot/mesh/noise", 0) <<std::endl;
     getfem::regular_unit_mesh(mesh_, nsubdiv, pgt, df("biot/mesh/noise", 0));
+    ref_values.lref=df("biot/mesh/lref", 1.e+3);
     std::cout<<"end mesh generation"<<std::endl;
 
     // set  integration methods  
@@ -90,7 +91,12 @@ void BIOT::gen_bc()
 
 void BIOT::configure_wp(const GetPot& df){
    std::cout << "BIOT::configure_wp Configuring workspace " << std::endl;
-   tau_[0] = df("time/dt", 1.0 ); // dt into  the workspace
+   ref_values.pref_out = df("biot/material/prefout", 0.9 );
+   ref_values.pref_in = df("biot/material/prefin", 1. ); 
+   double dp=ref_values.pref_out -ref_values.pref_in;
+   ref_values.kref =  df("biot/material/k",1.);
+   ref_values.tref =  ( ref_values.lref * ref_values.lref)/ref_values.kref;
+   tau_[0] = ( df("time/dt", 1.0 )  ); // dt into  the workspace
    workspace_.add_fixed_size_constant("tau", tau_);
    double poisson=df("biot/material/poisson", 0.3 );
    double E=df("biot/material/E", 1. );
@@ -102,7 +108,11 @@ void BIOT::configure_wp(const GetPot& df){
    bm_[0] =  df("biot/material/biot_modulus",1.);
    workspace_.add_fixed_size_constant("bm", bm_);
    //---------------------------------------------------------
-   lambda_[0] = lambda_l;workspace_.add_fixed_size_constant("lambda", lambda_);
+   lambda_[0] = lambda_l;
+   workspace_.add_fixed_size_constant("lambda", lambda_);
+   
+   beta_[0] = ref_values.lref ;
+   workspace_.add_fixed_size_constant("lref", beta_);
    //---------------------------------------------------------
    alpha_[0] = df("biot/material/alpha",1.);
    std::cout<<"alpha "<< alpha_[0]<<std::endl; 
@@ -114,20 +124,23 @@ void BIOT::configure_wp(const GetPot& df){
    penalty_[0] = 1.e+12; // 1---10
    workspace_.add_fixed_size_constant("penalty", penalty_);
    std::cout<<"BIOT::configure_wp end of workspace configuration"<<std::endl;
+   
+   fcoef_[0] = (2200*0.8 + 1000*0.2 -1000) *ref_values.lref*ref_values.lref;
+   workspace_.add_fixed_size_constant("fr", fcoef_);
 }
 
 
 void BIOT::assembly_mat(){
    std::cout<<"BIOT::assembly_mat start assembling K"<<std::endl;
 // ------------------ expressions --------------------------
-   workspace_.add_expression("2*mu*Sym(Grad_u):Grad_Test_u + lambda*Div_u*Div_Test_u - alpha*p.Div_Test_u ", mim_);
-   workspace_.add_expression( "+(1/bm)*p.Test_p + tau*permeability*Grad_p.Grad_Test_p+ alpha*Test_p*Div_u", mim_);
+   workspace_.add_expression("2*mu*Sym(Grad_u):Grad_Test_u + lambda*Div_u*Div_Test_u - lref*alpha*p.Div_Test_u ", mim_);
+   workspace_.add_expression( "+(1/bm)*p.Test_p/permeability/tau + Grad_p.Grad_Test_p+ alpha*Test_p*Div_u/permeability/tau", mim_);
    // workspace_.assembly(2);
    // gmm::copy(workspace_.assembled_matrix(), K_);
    // workspace_.clear_expressions();
 // bcs
-   workspace_.add_expression("penalty/element_size*p*Test_p", mim_, TOP);
-   workspace_.add_expression("-permeability*Grad_p.Normal*Test_p - permeability*Grad_Test_p.Normal*p ", mim_, TOP); 	
+   workspace_.add_expression("penalty/element_size*p*Test_p/permeability", mim_, TOP);
+   workspace_.add_expression("-Grad_p.Normal*Test_p - Grad_Test_p.Normal*p ", mim_, TOP); 	
    // workspace_.add_expression("penalty/element_size*p*Test_p", mim_, LEFT);
    // workspace_.add_expression("penalty/element_size*p*Test_p", mim_, RIGHT);// 1 is the region	
    // workspace_.add_expression("-permeability*Grad_p.Normal*Test_p - permeability*Grad_Test_p.Normal*p ", mim_, LEFT); 	
@@ -152,8 +165,8 @@ void BIOT::assembly_rhs(){
    gmm::clear(rhs_);
    //======= RHS =====================
    if(N_==2) workspace_.add_expression("0.*0.001*(2200*0.8 + 1000*0.2 -1000 )*[0,-1].Test_u", mim_);
-   if(N_==3) workspace_.add_expression("0.*[0,0,-1].Test_u", mim_);
-   workspace_.add_expression("+[+0.0e-6].Test_p + (1/bm)*p_old.Test_p + alpha*Test_p*Div_u_old", mim_);
+   if(N_==3) workspace_.add_expression("1.*fr*[0,0,-1].Test_u", mim_);
+   workspace_.add_expression("+[+0.0e-6].Test_p + (1/bm)*p_old.Test_p/permeability/tau + alpha*Test_p*Div_u_old/permeability/tau", mim_);
    workspace_.set_assembled_vector(rhs_);
    workspace_.assembly(1);
    workspace_.clear_expressions();

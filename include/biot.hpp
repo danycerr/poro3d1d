@@ -31,6 +31,15 @@ typedef gmm::row_matrix<sparse_vector_type> sparse_matrix_type;
 typedef gmm::col_matrix<sparse_vector_type> col_sparse_matrix_type;
 typedef std::vector<scalar_type> plain_vector;
 
+struct nodimref{
+    double tref;
+    double lref;
+    double uref;
+    double pref_in;
+    double pref_out;
+    double kref;
+};
+
 class BIOT
 {
 public:
@@ -58,10 +67,10 @@ private:
    getfem::mesh_fem mf_coef_;      /// the mesh_fem to represent pde coefficients 
    getfem::ga_workspace workspace_; /// generic workspace for the solution
    enum { BOTTOM = 1, TOP = 2, LEFT = 3, RIGHT =4, LEFTX = 5, RIGHTX =6}; // descriptor for zones
-
+   nodimref ref_values;
    int N_;                     /// problem dimension
    // material properties
-   std::vector<scalar_type> tau_, mu_, bm_ ,lambda_, alpha_, permeability_,penalty_;
+   std::vector<scalar_type> tau_, mu_, bm_ ,lambda_, alpha_, permeability_,penalty_,beta_,fcoef_;
 
    std::vector<scalar_type> U_, U_old_, P_, P_old_, UP_, rhs_u_,rhs_p_, rhs_;    /// diplacement,  pressure, pressure_old
    sparse_matrix_type Kp_, Ku_, K_;                         /// iteration matrix 	

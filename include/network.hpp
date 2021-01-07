@@ -60,11 +60,11 @@ private:
    getfem::mesh_fem mf_coef_;      /// the mesh_fem to represent pde coefficients 
    std::vector<getfem::node> BCList_;
    std::vector<scalar_type> BC_value_;
-   std::vector<scalar_type> Y_;
+   std::vector<scalar_type> Y_, k_ratio_,tau_;
    std::vector<int> local_idx_bc_;
    std::vector<scalar_type> radius_; // branch radius
    size_type nb_branches_; // number branches in the network
-   
+   double lref;
 
    
    getfem::ga_workspace workspace_; /// generic workspace for the solution
